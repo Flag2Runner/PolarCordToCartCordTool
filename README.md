@@ -21,7 +21,7 @@ This plugin converts 3D polar cords and creates a cube on cartesian 3D space
 # Instructions:
 
 > [!NOTE]
-> This is only a tool meant for maya and the math had been made for maya specificly since the z and x axis are swiched normally when using actuall math.
+> This is only a tool meant for maya and the math has been made for maya specificly since the z and x axis are swiched normally when using actuall math.
 
 <img src = assets\Example.png width = 300> 
 
