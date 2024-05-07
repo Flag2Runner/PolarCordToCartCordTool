@@ -42,19 +42,63 @@ def GetObjPos(obj):
 def SetObjPos(obj, pos: Vector):
     mc.setAttr(obj + ".translate", pos.x, pos.y, pos.z, type = "float3")
 
+
 class GeoCreator:
     def __init__(self):  
         self.geoSize = 10
         self.radialValue = 10
-        self.thetaValue = 30
-        self.color = []
+        self.polarValue = 30
+        self.alphaValue = 30
+        self.color = [128,128,128]
+
+    def UpdateColors(self, r,g,b):
+        self.color[0] = r
+        self.color[1] = g
+        self.color[2] = b
 
     def CreateGeoCube(self):
-        colorR = self.color[0] 
-        colorG = self.color[1] 
-        colorB = self.color[2] 
+        x = self.radialValue * m.sin(m.degrees(self.polarValue)) * m.cos(m.degrees(self.alphaValue))
+        y = self.radialValue * m.sin(m.degrees(self.polarValue)) * m.sin(m.degrees(self.alphaValue))
+        z = self.radialValue * m.cos(m.degrees(self.polarValue))
 
+        if mc.objExists(self.PolyName()):
+            mc.delete(self.PolyName())
 
+        mc.polyCube(n = self.PolyName(), ax =[0,0,90], h = self.geoSize, w = self.geoSize)
+
+        mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+       
+        self.CreateMaterialForCube()
+
+    def CreateMaterialForCube(self):
+        r = self.color[0] 
+        g = self.color[1] 
+        b = self.color[2] 
+        matName = self.GetShaderNameForCube(self.PolyName())
+        if not mc.objExists(matName):
+            mc.shadingNode("lambert", asShader = True, name = matName) 
+
+        setName = self.GetShaderEngineForCube(self.PolyName())
+        if not mc.objExists(setName):
+            mc.sets(name = setName, renderable = True, empty = True)
+
+        mc.connectAttr(matName + ".outColor", setName + ".surfaceShader", force = True)
+        mc.sets(self.PolyName(), edit=True, forceElement = setName)
+
+        self.SetGhostColor(r,g,b)
+
+    def SetGhostColor(self, r, g, b):
+        ghostMat = self.GetShaderNameForCube(self.PolyName())
+        mc.setAttr(ghostMat + ".color", r, g, b, type = "double3")
+
+    def PolyName(self):
+        return "Cube"
+    
+    def GetShaderEngineForCube(self, cube):
+        return cube + "_sg"
+    
+    def GetShaderNameForCube(self, cube):
+        return cube + "_mat"
 
 
 
@@ -64,37 +108,31 @@ class GeoCreator:
 #             UI                       #
 ########################################
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QLineEdit, QHBoxLayout, QColorDialog, QCheckBox
-from PySide2.QtGui import QDoubleValidator, QColor, QPainter, QPalette, QPixmap
+from PySide2.QtGui import QDoubleValidator, QColor, QPainter, QPalette, QPixmap, QBrush
+from PySide2.QtCore import Signal
 
 class ColorPickerWidget(QWidget):
-    def __init__(self):
+    colorChanged = Signal(QColor)
+    def __init__(self, width = 190, height = 20):
         super().__init__()
-        self.color = QColor(0,0,0)
-        self.masterLayout = QVBoxLayout()   
-        self.setLayout(self.masterLayout)
-        self.button = QPushButton()
-        self.button.clicked.connect(self.ButtonPressed)
-        self.setAutoFillBackground(True)
-        self.masterLayout.addWidget(self.button)
-        self.setFixedSize(200,50)
-        self.colorD = QColorDialog()
+        self.setFixedSize(width, height)
+        self.color = QColor(128, 128, 128)
 
-    def ButtonPressed(self, event):
-        self.colorD = QColorDialog(self.color)
-        self.color = QColor(self.colorD.getColor())
-        print(self.color.name())
-        
-        self.button.setStyleSheet(f"background-color : {self.color.name()}")
+    def mousePressEvent(self, event):
+        color = QColorDialog().getColor(self.color)
+        if color.isValid:
+            self.color = color
+            self.colorChanged.emit(self.color)
+            self.update()
 
-        print(f"Button {self.color.name()}")
-        
     def paintEvent(self, event):
-        self.colorD = QColorDialog().setCurrentColor(self.color) 
-        self.button.setStyleSheet(f"background-color : {self.color.name()}")
+        painter = QPainter(self)
+        painter.setBrush(QBrush(self.color))
+        painter.drawRect(0,0, self.width(), self.height())    
 
         
 
-class ThreeJntChainWiget(QWidget):
+class CreatePolarGeo(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -113,14 +151,23 @@ class ThreeJntChainWiget(QWidget):
         self.radialValue.setText("10") # probably broken
         ctrlSettingLayout.addWidget(self.radialValue)
 
-        thetaCordinateLabel = QLabel("Theta Cordinate Value: ")
-        ctrlSettingLayout.addWidget(thetaCordinateLabel)
+        polarLable = QLabel("Polar Value: ")
+        ctrlSettingLayout.addWidget(polarLable)
 
-        self.thetaValue = QLineEdit()
-        self.thetaValue.setValidator(QDoubleValidator())
-        self.thetaValue.textChanged.connect(self.ThetaValueSet)
-        self.thetaValue.setText("30") # probably broken
-        ctrlSettingLayout.addWidget(self.thetaValue)
+        self.polarValue = QLineEdit()
+        self.polarValue.setValidator(QDoubleValidator())
+        self.polarValue.textChanged.connect(self.PolarValueSet)
+        self.polarValue.setText("30") # probably broken
+        ctrlSettingLayout.addWidget(self.polarValue)
+
+        alphaLable = QLabel("Alpha Value: ")
+        ctrlSettingLayout.addWidget(alphaLable)
+
+        self.alphaValue = QLineEdit()
+        self.alphaValue.setValidator(QDoubleValidator())
+        self.alphaValue.textChanged.connect(self.AlphaValueSet)
+        self.alphaValue.setText("30") # probably broken
+        ctrlSettingLayout.addWidget(self.alphaValue)
 
         ctrlSizeLabel = QLabel("Geo Size: ")
         ctrlSettingLayout.addWidget(ctrlSizeLabel)
@@ -134,11 +181,12 @@ class ThreeJntChainWiget(QWidget):
         self.masterLayout.addLayout(ctrlSettingLayout)
 
         self.colorPicker = ColorPickerWidget()
+        self.colorPicker.colorChanged.connect(self.ColorPickerChanged)
         self.masterLayout.addWidget(self.colorPicker)
 
-        rigThreeJntchainBtn = QPushButton("Create Geo From Polar Cord")
-        self.masterLayout.addWidget(rigThreeJntchainBtn)
-        rigThreeJntchainBtn.clicked.connect(self.CreateGeoBtnClicked)
+        createPolarGeo = QPushButton("Create Geo From PolarValue Cord")
+        self.masterLayout.addWidget(createPolarGeo)
+        createPolarGeo.clicked.connect(self.CreateGeoBtnClicked)
 
 
         self.adjustSize()
@@ -146,22 +194,27 @@ class ThreeJntChainWiget(QWidget):
     
     def CreateGeoBtnClicked(self):
         print("Rig Button Pressed")
-        self.geoCreator.colorR = self.colorPicker.color.redF()
-        self.geoCreator.colorG = self.colorPicker.color.greenF()
-        self.geoCreator.colorB = self.colorPicker.color.blueF()
-        print(self.colorPicker.color)
         self.geoCreator.CreateGeoCube()
     
     def CtrlSizeValueSet(self, valStr:str):
         size = float(valStr)
-        self.geoCreator.ctrlSize = size
+        self.geoCreator.geoSize = size
+
     def RadialValueSet(self, valStr:str):
         val = float(valStr)
         self.geoCreator.radialValue = val
 
-    def ThetaValueSet(self, valStr:str):
+    def PolarValueSet(self, valStr:str):
         val = float(valStr)
-        self.geoCreator.thetaValue = val
+        self.geoCreator.polarValue = val
 
-threeJntChainWidget = ThreeJntChainWiget()
+    def AlphaValueSet(self, valStr:str):
+        val = float(valStr)
+        self.geoCreator.alphaValue = val
+        
+    def ColorPickerChanged(self, newColor):
+        self.geoCreator.UpdateColors(newColor.redF(), newColor.greenF(), newColor.blueF())
+
+
+threeJntChainWidget = CreatePolarGeo()
 threeJntChainWidget.show()
