@@ -27,6 +27,4 @@ global proc AddShelfBtnForTool(string $srcFileName)
 }
 
 AddShelfBtnForTool("CreateController");
-AddShelfBtnForTool("GhostPoser");
-AddShelfBtnForTool("MayaToUE");
-AddShelfBtnForTool("ProxyBuilder");
+AddShelfBtnForTool("CreateGeoPolar");
