@@ -57,9 +57,9 @@ class GeoCreator:
         self.color[2] = b
 
     def CreateGeoCube(self):
-        x = self.radialValue * m.sin(m.degrees(self.polarValue)) * m.cos(m.degrees(self.alphaValue))
-        y = self.radialValue * m.sin(m.degrees(self.polarValue)) * m.sin(m.degrees(self.alphaValue))
-        z = self.radialValue * m.cos(m.degrees(self.polarValue))
+        x = self.radialValue * m.sin(self.polarValue) * m.cos(self.alphaValue)
+        y = self.radialValue * m.sin(self.polarValue) * m.sin(self.alphaValue)
+        z = self.radialValue * m.cos(self.polarValue)
 
         if mc.objExists(self.PolyName()):
             mc.delete(self.PolyName())
