@@ -44,4 +44,4 @@ It will delete the old mesh when pressed or anything called 'cube' before creati
 
 <img src = assets\ColorPickerExample.png width = 500> 
 
-This is what shows up when you press the color picker button. Once you pick your color and press ok the color will update and it's as simple as that if you just want to update the color on the mesh you can just press the create geo button again to apply the color. The color shown on the button is the color that will be applied on the mesh when created.
+This is what shows up when you press the color picker button. Once you pick your color and press ok the color will update and it's as simple as that. If you just want to update the color on the mesh you can just press the create geo button again to apply the color. The color shown on the button is the color that will be applied on the mesh when created.
