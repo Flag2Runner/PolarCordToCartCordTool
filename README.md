@@ -1,4 +1,4 @@
-# Maya Polar Cord Tool
+# Maya Polar Coordinates to Cartesian Coordinates Tool
 ## Introduction:
 This is a tool I developed to help with the placing and moving of objects in polar cordinate space
 
