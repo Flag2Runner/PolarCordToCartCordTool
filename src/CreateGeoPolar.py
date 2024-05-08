@@ -71,42 +71,49 @@ class GeoCreator:
         zr = self.radialRotationValue * m.sin(self.polarRotationValue)
         
         selection = mc.ls(sl=True)
-        if not selection:
-            print("No Mesh Selected")
-            self.model = "Cube"
-            if mc.objExists(self.PolyName()):
+        selectionmesh = [obj for obj in selection if mc.nodeType(obj) == 'mesh']
+
+        if not selection or selectionmesh:
+            
+            if not selection:
+                print("No Mesh Selected")
+                self.model = "Cube"
+                if mc.objExists(self.PolyName()):
+                    mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+                    mc.xform(self.PolyName(), cp = True)
+                    mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+                    mc.rotate(xr,yr,zr, self.PolyName())
+                    if self.isColorActive == True:
+                        self.CreateMaterialForCube()
+                    return True, ""
+
+                mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
+                mc.xform(self.PolyName(), cp = True)
+                mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+                mc.rotate(xr,yr,zr, self.PolyName())
+                mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+            
+                if self.isColorActive == True:
+                        self.CreateMaterialForCube()
+                return True, ""
+            
+            selection = selection[0]
+            shapes = mc.listRelatives(selection, s=True)
+            for s in shapes:
+                if mc.objectType(s) == "mesh":
+                    self.model = selection
+
+            if mc.objExists(self.model):
                 mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
                 mc.xform(self.PolyName(), cp = True)
                 mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
                 mc.rotate(xr,yr,zr, self.PolyName())
                 if self.isColorActive == True:
-                    self.CreateMaterialForCube()
-                return 0
-
-            mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
-            mc.xform(self.PolyName(), cp = True)
-            mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
-            mc.rotate(xr,yr,zr, self.PolyName())
-            mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+                        self.CreateMaterialForCube()
+            return True, ""
+        else:
+            return False, "Incorrect Object Selected Please Select a single mesh or nothing at all"
         
-            if self.isColorActive == True:
-                    self.CreateMaterialForCube()
-            return 0
-        
-        selection = selection[0]
-        shapes = mc.listRelatives(selection, s=True)
-        for s in shapes:
-            if mc.objectType(s) == "mesh":
-                self.model = selection
-
-        if mc.objExists(self.model):
-            mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
-            mc.xform(self.PolyName(), cp = True)
-            mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
-            mc.rotate(xr,yr,zr, self.PolyName())
-            if self.isColorActive == True:
-                    self.CreateMaterialForCube()
-        return 0
 
     def CreateMaterialForCube(self):
         r = self.color[0] 
@@ -145,7 +152,7 @@ class GeoCreator:
 ########################################
 #             UI                       #
 ########################################
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QLineEdit, QHBoxLayout, QColorDialog, QCheckBox
+from PySide2.QtWidgets import QMessageBox, QWidget, QLabel, QVBoxLayout, QPushButton, QLineEdit, QHBoxLayout, QColorDialog, QCheckBox
 from PySide2.QtGui import QDoubleValidator, QColor, QPainter, QPalette, QPixmap, QBrush
 from PySide2.QtCore import Signal
 
@@ -272,7 +279,9 @@ class CreatePolarGeo(QWidget):
     
     def CreateGeoBtnClicked(self):
         print("Create Button Pressed")
-        self.geoCreator.CreateGeoCube()
+        success, msg = self.geoCreator.CreateGeoCube()
+        if not success:
+            QMessageBox.warning(self, "Warning", msg)
     
     def CtrlSizeValueSet(self, valStr:str):
         size = float(valStr)
