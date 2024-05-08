@@ -57,14 +57,21 @@ class GeoCreator:
         self.color[2] = b
 
     def CreateGeoCube(self):
-        x = self.radialValue * m.sin(self.polarValue) * m.cos(self.alphaValue)
-        y = self.radialValue * m.sin(self.polarValue) * m.sin(self.alphaValue)
-        z = self.radialValue * m.cos(self.polarValue)
+        x = self.radialValue * m.cos(self.polarValue) * m.cos(self.alphaValue)
+        y = self.radialValue * m.cos(self.polarValue) * m.sin(self.alphaValue)
+        z = self.radialValue * m.sin(self.polarValue)
 
         if mc.objExists(self.PolyName()):
-            mc.delete(self.PolyName())
+            mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+            mc.xform(self.PolyName(), cp = True)
+            mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+            self.SetGhostColor(self.color[0],self.color[1],self.color[2])
+            return
 
-        mc.polyCube(n = self.PolyName(), ax =[0,0,90], h = self.geoSize, w = self.geoSize)
+        mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
+        mc.xform(self.PolyName(), cp = True)
+        mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+
 
         mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
        
@@ -193,7 +200,7 @@ class CreatePolarGeo(QWidget):
         self.geoCreator = GeoCreator()
     
     def CreateGeoBtnClicked(self):
-        print("Rig Button Pressed")
+        print("Create Button Pressed")
         self.geoCreator.CreateGeoCube()
     
     def CtrlSizeValueSet(self, valStr:str):
