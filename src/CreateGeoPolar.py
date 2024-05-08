@@ -45,10 +45,13 @@ def SetObjPos(obj, pos: Vector):
 
 class GeoCreator:
     def __init__(self):  
-        self.geoSize = 10
+        self.geoSize = 1
         self.radialValue = 10
         self.polarValue = 30
         self.alphaValue = 30
+        self.radialRotationValue = 10
+        self.polarRotationValue = 30
+        self.alphaRotationValue = 30
         self.color = [128,128,128]
 
     def UpdateColors(self, r,g,b):
@@ -61,16 +64,23 @@ class GeoCreator:
         y = self.radialValue * m.cos(self.polarValue) * m.sin(self.alphaValue)
         z = self.radialValue * m.sin(self.polarValue)
 
+        xr = self.radialRotationValue * m.cos(self.polarRotationValue) * m.cos(self.alphaRotationValue)
+        yr = self.radialRotationValue * m.cos(self.polarRotationValue) * m.sin(self.alphaRotationValue)
+        zr = self.radialRotationValue * m.sin(self.polarRotationValue)
+        
+
         if mc.objExists(self.PolyName()):
             mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
             mc.xform(self.PolyName(), cp = True)
             mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+            mc.rotate(xr,yr,zr, self.PolyName())
             self.SetGhostColor(self.color[0],self.color[1],self.color[2])
             return
 
         mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
         mc.xform(self.PolyName(), cp = True)
         mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+        mc.rotate(xr,yr,zr, self.PolyName())
 
 
         mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
@@ -143,7 +153,7 @@ class CreatePolarGeo(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Create Three Joint Chain")
+        self.setWindowTitle("PolarCord to CartCord Tool")
         self.setGeometry(0,0,300,300)
         self.masterLayout = QVBoxLayout()
         self.setLayout(self.masterLayout)
@@ -175,6 +185,33 @@ class CreatePolarGeo(QWidget):
         self.alphaValue.textChanged.connect(self.AlphaValueSet)
         self.alphaValue.setText("30") # probably broken
         ctrlSettingLayout.addWidget(self.alphaValue)
+
+        radialRotationCordinateLabel = QLabel("Rotation Radial Cordinate Value: ")
+        ctrlSettingLayout.addWidget(radialRotationCordinateLabel)
+
+        self.radialRotationValue = QLineEdit()
+        self.radialRotationValue.setValidator(QDoubleValidator())
+        self.radialRotationValue.textChanged.connect(self.RadialRotationValueSet)
+        self.radialRotationValue.setText("10") # probably broken
+        ctrlSettingLayout.addWidget(self.radialRotationValue)
+
+        polarRotationLable = QLabel("Rotation Polar Value: ")
+        ctrlSettingLayout.addWidget(polarRotationLable)
+
+        self.polarRoationValue = QLineEdit()
+        self.polarRoationValue.setValidator(QDoubleValidator())
+        self.polarRoationValue.textChanged.connect(self.PolarRoationValueSet)
+        self.polarRoationValue.setText("30") # probably broken
+        ctrlSettingLayout.addWidget(self.polarRoationValue)
+
+        alphaRotationLable = QLabel("Rotation Alpha Value: ")
+        ctrlSettingLayout.addWidget(alphaRotationLable)
+
+        self.alphaRotationValue = QLineEdit()
+        self.alphaRotationValue.setValidator(QDoubleValidator())
+        self.alphaRotationValue.textChanged.connect(self.AlphaRotationValueSet)
+        self.alphaRotationValue.setText("30") # probably broken
+        ctrlSettingLayout.addWidget(self.alphaRotationValue)
 
         ctrlSizeLabel = QLabel("Geo Size: ")
         ctrlSettingLayout.addWidget(ctrlSizeLabel)
@@ -211,13 +248,25 @@ class CreatePolarGeo(QWidget):
         val = float(valStr)
         self.geoCreator.radialValue = val
 
+    def RadialRotationValueSet(self, valStr:str):
+        val = float(valStr)
+        self.geoCreator.radialRotationValue = val
+
     def PolarValueSet(self, valStr:str):
         val = float(valStr)
         self.geoCreator.polarValue = val
 
+    def PolarRotationValueSet(self, valStr:str):
+        val = float(valStr)
+        self.geoCreator.polarRotationValue = val
+
     def AlphaValueSet(self, valStr:str):
         val = float(valStr)
         self.geoCreator.alphaValue = val
+
+    def AlphaRotationValueSet(self, valStr:str):
+        val = float(valStr)
+        self.geoCreator.alphaRotationValue = val
         
     def ColorPickerChanged(self, newColor):
         self.geoCreator.UpdateColors(newColor.redF(), newColor.greenF(), newColor.blueF())
