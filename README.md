@@ -39,7 +39,7 @@ This plugin converts 3D polar cords and creates a cube on cartesian 3D space.
 
 * The Rotation Alpha Value is the horizontal angle from the Z axis.
 
-* The Geo Size is the size of the geo when created.
+* The Geo Size is the size of the geo when updated or created.
 
 * The Color Change Check Box when checked updates the material with a new color and if unchecked will not do anything with the material at all.
 
