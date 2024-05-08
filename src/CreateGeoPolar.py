@@ -53,6 +53,8 @@ class GeoCreator:
         self.polarRotationValue = 30
         self.alphaRotationValue = 30
         self.color = [128,128,128]
+        self.model = ""
+        self.isColorActive = True
 
     def UpdateColors(self, r,g,b):
         self.color[0] = r
@@ -68,24 +70,43 @@ class GeoCreator:
         yr = self.radialRotationValue * m.cos(self.polarRotationValue) * m.sin(self.alphaRotationValue)
         zr = self.radialRotationValue * m.sin(self.polarRotationValue)
         
+        selection = mc.ls(sl=True)
+        if not selection:
+            print("No Mesh Selected")
+            self.model = "Cube"
+            if mc.objExists(self.PolyName()):
+                mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+                mc.xform(self.PolyName(), cp = True)
+                mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+                mc.rotate(xr,yr,zr, self.PolyName())
+                if self.isColorActive == True:
+                    self.CreateMaterialForCube()
+                return 0
 
-        if mc.objExists(self.PolyName()):
+            mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
+            mc.xform(self.PolyName(), cp = True)
+            mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
+            mc.rotate(xr,yr,zr, self.PolyName())
+            mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
+        
+            if self.isColorActive == True:
+                    self.CreateMaterialForCube()
+            return 0
+        
+        selection = selection[0]
+        shapes = mc.listRelatives(selection, s=True)
+        for s in shapes:
+            if mc.objectType(s) == "mesh":
+                self.model = selection
+
+        if mc.objExists(self.model):
             mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
             mc.xform(self.PolyName(), cp = True)
             mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
             mc.rotate(xr,yr,zr, self.PolyName())
-            self.SetGhostColor(self.color[0],self.color[1],self.color[2])
-            return
-
-        mc.polyCube(n = self.PolyName(), ax =[0,0,90],)
-        mc.xform(self.PolyName(), cp = True)
-        mc.scale(self.geoSize, self.geoSize, self.geoSize, self.PolyName())
-        mc.rotate(xr,yr,zr, self.PolyName())
-
-
-        mc.move(x, y, z, f"{self.PolyName()}", absolute=True, ws = True)
-       
-        self.CreateMaterialForCube()
+            if self.isColorActive == True:
+                    self.CreateMaterialForCube()
+        return 0
 
     def CreateMaterialForCube(self):
         r = self.color[0] 
@@ -109,7 +130,7 @@ class GeoCreator:
         mc.setAttr(ghostMat + ".color", r, g, b, type = "double3")
 
     def PolyName(self):
-        return "Cube"
+        return self.model
     
     def GetShaderEngineForCube(self, cube):
         return cube + "_sg"
@@ -130,7 +151,7 @@ from PySide2.QtCore import Signal
 
 class ColorPickerWidget(QWidget):
     colorChanged = Signal(QColor)
-    def __init__(self, width = 190, height = 20):
+    def __init__(self, width = 300, height = 20):
         super().__init__()
         self.setFixedSize(width, height)
         self.color = QColor(128, 128, 128)
@@ -154,86 +175,99 @@ class CreatePolarGeo(QWidget):
         super().__init__()
 
         self.setWindowTitle("PolarCord to CartCord Tool")
-        self.setGeometry(0,0,300,300)
+        self.setGeometry(0,0,100,200)
         self.masterLayout = QVBoxLayout()
         self.setLayout(self.masterLayout)
 
-        ctrlSettingLayout = QVBoxLayout()
+
+        ctrlSettingLayout = QHBoxLayout()
+        rotationSettingLayout = QVBoxLayout()
+        MoveSettingLayout = QVBoxLayout()
         radialCordinateLabel = QLabel("Radial Cordinate Value: ")
-        ctrlSettingLayout.addWidget(radialCordinateLabel)
+        MoveSettingLayout.addWidget(radialCordinateLabel)
 
         self.radialValue = QLineEdit()
         self.radialValue.setValidator(QDoubleValidator())
         self.radialValue.textChanged.connect(self.RadialValueSet)
         self.radialValue.setText("10") # probably broken
-        ctrlSettingLayout.addWidget(self.radialValue)
+        MoveSettingLayout.addWidget(self.radialValue)
 
         polarLable = QLabel("Polar Value: ")
-        ctrlSettingLayout.addWidget(polarLable)
+        MoveSettingLayout.addWidget(polarLable)
 
         self.polarValue = QLineEdit()
         self.polarValue.setValidator(QDoubleValidator())
         self.polarValue.textChanged.connect(self.PolarValueSet)
         self.polarValue.setText("30") # probably broken
-        ctrlSettingLayout.addWidget(self.polarValue)
+        MoveSettingLayout.addWidget(self.polarValue)
 
         alphaLable = QLabel("Alpha Value: ")
-        ctrlSettingLayout.addWidget(alphaLable)
+        MoveSettingLayout.addWidget(alphaLable)
 
         self.alphaValue = QLineEdit()
         self.alphaValue.setValidator(QDoubleValidator())
         self.alphaValue.textChanged.connect(self.AlphaValueSet)
         self.alphaValue.setText("30") # probably broken
-        ctrlSettingLayout.addWidget(self.alphaValue)
+        MoveSettingLayout.addWidget(self.alphaValue)
 
         radialRotationCordinateLabel = QLabel("Rotation Radial Cordinate Value: ")
-        ctrlSettingLayout.addWidget(radialRotationCordinateLabel)
+        rotationSettingLayout.addWidget(radialRotationCordinateLabel)
 
         self.radialRotationValue = QLineEdit()
         self.radialRotationValue.setValidator(QDoubleValidator())
         self.radialRotationValue.textChanged.connect(self.RadialRotationValueSet)
         self.radialRotationValue.setText("10") # probably broken
-        ctrlSettingLayout.addWidget(self.radialRotationValue)
+        rotationSettingLayout.addWidget(self.radialRotationValue)
 
         polarRotationLable = QLabel("Rotation Polar Value: ")
-        ctrlSettingLayout.addWidget(polarRotationLable)
+        rotationSettingLayout.addWidget(polarRotationLable)
 
         self.polarRoationValue = QLineEdit()
         self.polarRoationValue.setValidator(QDoubleValidator())
-        self.polarRoationValue.textChanged.connect(self.PolarRoationValueSet)
+        self.polarRoationValue.textChanged.connect(self.PolarRotationValueSet)
         self.polarRoationValue.setText("30") # probably broken
-        ctrlSettingLayout.addWidget(self.polarRoationValue)
+        rotationSettingLayout.addWidget(self.polarRoationValue)
 
         alphaRotationLable = QLabel("Rotation Alpha Value: ")
-        ctrlSettingLayout.addWidget(alphaRotationLable)
+        rotationSettingLayout.addWidget(alphaRotationLable)
 
         self.alphaRotationValue = QLineEdit()
         self.alphaRotationValue.setValidator(QDoubleValidator())
         self.alphaRotationValue.textChanged.connect(self.AlphaRotationValueSet)
         self.alphaRotationValue.setText("30") # probably broken
-        ctrlSettingLayout.addWidget(self.alphaRotationValue)
+        rotationSettingLayout.addWidget(self.alphaRotationValue)
+
+        ctrlSettingLayout.addLayout(MoveSettingLayout)
+        ctrlSettingLayout.addLayout(rotationSettingLayout)
+        self.masterLayout.addLayout(ctrlSettingLayout)
 
         ctrlSizeLabel = QLabel("Geo Size: ")
-        ctrlSettingLayout.addWidget(ctrlSizeLabel)
+        self.masterLayout.addWidget(ctrlSizeLabel)
 
         self.ctrlSize = QLineEdit()
         self.ctrlSize.setValidator(QDoubleValidator())
         self.ctrlSize.textChanged.connect(self.CtrlSizeValueSet)
-        self.ctrlSize.setText("10") # probably broken
-        ctrlSettingLayout.addWidget(self.ctrlSize)
+        self.ctrlSize.setText("1") # probably broken
+        self.masterLayout.addWidget(self.ctrlSize)
 
-        self.masterLayout.addLayout(ctrlSettingLayout)
+        self.ColorLabel = QLabel("Color Options: \n")
+        self.masterLayout.addWidget(self.ColorLabel)
+
+        self.checkbox = QCheckBox("Enable Color Change", self)
+        self.checkbox.setChecked(True)
+        self.checkbox.stateChanged.connect(self.OnCheckBoxChanged)
+        self.masterLayout.addWidget(self.checkbox)
 
         self.colorPicker = ColorPickerWidget()
         self.colorPicker.colorChanged.connect(self.ColorPickerChanged)
         self.masterLayout.addWidget(self.colorPicker)
 
-        createPolarGeo = QPushButton("Create Geo From PolarValue Cord")
+        createPolarGeo = QPushButton("Update Polar Cords")
         self.masterLayout.addWidget(createPolarGeo)
         createPolarGeo.clicked.connect(self.CreateGeoBtnClicked)
 
 
-        self.adjustSize()
+        #self.adjustSize()
         self.geoCreator = GeoCreator()
     
     def CreateGeoBtnClicked(self):
@@ -270,6 +304,13 @@ class CreatePolarGeo(QWidget):
         
     def ColorPickerChanged(self, newColor):
         self.geoCreator.UpdateColors(newColor.redF(), newColor.greenF(), newColor.blueF())
+
+    def OnCheckBoxChanged(self, state):
+        if state == 2:  # Checked
+            self.geoCreator.isColorActive = True
+            
+        else: # Unchecked
+            self.geoCreator.isColorActive = False
 
 
 threeJntChainWidget = CreatePolarGeo()

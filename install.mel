@@ -26,5 +26,4 @@ global proc AddShelfBtnForTool(string $srcFileName)
     shelfButton -c $command -stp "python" -image $iconPath;
 }
 
-AddShelfBtnForTool("CreateController");
 AddShelfBtnForTool("CreateGeoPolar");
