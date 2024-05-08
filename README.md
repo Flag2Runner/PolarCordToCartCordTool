@@ -65,4 +65,4 @@ Finally press the Update Polar Cord Button
 
 <img src = assets\ColorPickerExample.png width = 500> 
 
-This is what shows up when you press the color picker button. Once you pick your color and press ok the color will update and it's as simple as that. If you just want to update the color on the mesh you can just press the create geo button again to apply the color. The color shown on the button is the color that will be applied on the mesh when created.
+This is what shows up when you press the color picker button. Once you pick your color and press ok the color will update and it's as simple as that. If you just want to update the color on the mesh you can just enable the color changed check box and then press the update polar cords button. This will also apply the polar transforms with it.
